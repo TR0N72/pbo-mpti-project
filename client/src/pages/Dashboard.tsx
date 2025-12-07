@@ -120,7 +120,7 @@ export const Dashboard = () => {
                 <div className="bg-gray-800 p-6 rounded-xl border border-gray-700 text-white">
                     <h3 className="text-lg font-semibold text-white mb-6">Real-time Traffic</h3>
                     <div className="h-80">
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                             <AreaChart data={trafficData}>
                                 <defs>
                                     <linearGradient id="colorDownload" x1="0" y1="0" x2="0" y2="1">
@@ -149,7 +149,7 @@ export const Dashboard = () => {
                 <div className="bg-gray-800 p-6 rounded-xl border border-gray-700">
                     <h3 className="text-lg font-semibold text-white mb-6">Bandwidth Usage (Mock)</h3>
                     <div className="h-80">
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                             <BarChart data={[
                                 { name: 'iPhone 13', usage: 4.5 },
                                 { name: 'MacBook Pro', usage: 12.2 },
