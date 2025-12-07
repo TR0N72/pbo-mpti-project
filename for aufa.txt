@@ -1,0 +1,17 @@
+# Changes Report
+
+## OOP Implementation
+We have refactored the server logic to use Object-Oriented Programming (OOP) principles. This includes extracting logic into dedicated classes and creating a new server entry point.
+
+### New Files
+1.  **server/classes/DeviceManager.js**: Handles all CRUD operations for connected devices.
+2.  **server/classes/WifiManager.js**: Manages WiFi configuration settings.
+3.  **server/classes/TrafficMonitor.js**: Handles real-time traffic simulation and Socket.IO events.
+4.  **server/oop_server.js**: A new entry point class `RouterServer` that composes the above classes to run the server.
+5.  **OOP_Code_Summary.md**: A summary markdown file containing all the source code for the new OOP implementation.
+
+### Usage
+To run the server with the new OOP structure:
+`node server/oop_server.js`
+
+The original `server/index.js` remains untouched and can still be used.
