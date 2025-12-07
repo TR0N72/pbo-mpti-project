@@ -71,8 +71,8 @@ class RouterServer {
         });
 
         // --- Network Routes ---
-        this.app.get('/api/network', (req, res) => {
-            res.json(this.networkManager.getSettings());
+        this.app.get('/api/network', async (req, res) => {
+            res.json(await this.networkManager.getSettings());
         });
 
         this.app.post('/api/network', async (req, res) => {
@@ -81,8 +81,8 @@ class RouterServer {
         });
 
         // --- Security Routes ---
-        this.app.get('/api/security', (req, res) => {
-            res.json(this.securityManager.getSettings());
+        this.app.get('/api/security', async (req, res) => {
+            res.json(await this.securityManager.getSettings());
         });
 
         this.app.post('/api/security', async (req, res) => {
@@ -116,8 +116,8 @@ class RouterServer {
         });
 
         // --- Wifi Routes ---
-        this.app.get('/api/wifi', (req, res) => {
-            res.json(this.wifiManager.getSettings());
+        this.app.get('/api/wifi', async (req, res) => {
+            res.json(await this.wifiManager.getSettings());
         });
 
         this.app.post('/api/wifi', async (req, res) => {
