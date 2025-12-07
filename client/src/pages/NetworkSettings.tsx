@@ -22,7 +22,12 @@ export const NetworkSettings = () => {
         try {
             const res = await fetch('http://localhost:5000/api/network');
             const data = await res.json();
-            setSettings(data);
+            // Safeguard against missing data
+            if (data && data.lan && data.dhcp) {
+                setSettings(data);
+            } else {
+                console.error("Invalid network data received:", data);
+            }
         } catch (error) {
             console.error('Failed to fetch network settings');
         } finally {
