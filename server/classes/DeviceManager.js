@@ -1,41 +1,44 @@
+const JsonStore = require('./JsonStore');
+
 class DeviceManager {
-    constructor(initialDevices = []) {
-        this.devices = initialDevices;
+    constructor() {
+        this.store = new JsonStore('devices.json', [
+            { id: 1, name: 'iPhone 13', ip: '192.168.1.101', type: 'Mobile', status: 'Active' },
+            { id: 2, name: 'MacBook Pro', ip: '192.168.1.102', type: 'Laptop', status: 'Active' },
+            { id: 3, name: 'Smart TV', ip: '192.168.1.103', type: 'TV', status: 'Idle' },
+            { id: 4, name: 'Gaming PC', ip: '192.168.1.104', type: 'Desktop', status: 'Active' },
+        ]);
     }
 
-    getAllDevices() {
-        return this.devices;
+    async init() {
+        await this.store.init();
     }
 
-    getDeviceById(id) {
-        return this.devices.find(device => device.id === id);
+    async getAllDevices() {
+        return this.store.read();
     }
 
-    addDevice(device) {
+    async addDevice(device) {
+        const current = await this.store.read();
         const newDevice = {
-            id: this.devices.length + 1,
+            id: current.length > 0 ? Math.max(...current.map(d => d.id)) + 1 : 1,
             ...device,
             status: 'Active' // Default status
         };
-        this.devices.push(newDevice);
+        current.push(newDevice);
+        await this.store.write(current);
         return newDevice;
     }
 
-    removeDevice(id) {
-        const index = this.devices.findIndex(device => device.id === id);
-        if (index !== -1) {
-            return this.devices.splice(index, 1)[0];
+    async removeDevice(id) {
+        const current = await this.store.read();
+        const newDevices = current.filter(d => d.id !== id);
+        // Only return something if we actually deleted
+        if (newDevices.length !== current.length) {
+            await this.store.write(newDevices);
+            return { success: true };
         }
-        return null;
-    }
-
-    updateDeviceStatus(id, status) {
-        const device = this.getDeviceById(id);
-        if (device) {
-            device.status = status;
-            return device;
-        }
-        return null;
+        return { success: false };
     }
 }
 

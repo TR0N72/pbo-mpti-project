@@ -1,0 +1,21 @@
+{
+  "firewallResponse": true,
+  "vpnEnabled": false,
+  "parentalControl": false,
+  "portRules": [
+    {
+      "id": 1,
+      "name": "Minecraft Server",
+      "port": "25565",
+      "ip": "192.168.1.104",
+      "protocol": "TCP/UDP"
+    },
+    {
+      "id": 2,
+      "name": "Web Server",
+      "port": "80",
+      "ip": "192.168.1.102",
+      "protocol": "TCP"
+    }
+  ]
+}

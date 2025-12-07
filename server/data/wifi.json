@@ -1,0 +1,8 @@
+{
+  "ssid": "MySuperFastWifi",
+  "password": "securepassword123",
+  "band": "5GHz",
+  "security": "WPA3",
+  "channel": 36,
+  "isHidden": false
+}

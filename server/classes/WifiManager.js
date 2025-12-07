@@ -1,20 +1,29 @@
+const JsonStore = require('./JsonStore');
+
 class WifiManager {
-    constructor(initialSettings) {
-        this.settings = initialSettings || {
+    constructor() {
+        this.store = new JsonStore('wifi.json', {
             ssid: 'MySuperFastWifi',
+            password: 'securepassword123',
             band: '5GHz',
             security: 'WPA3',
-            channel: 36
-        };
+            channel: 36,
+            isHidden: false
+        });
+    }
+
+    async init() {
+        await this.store.init();
     }
 
     getSettings() {
-        return this.settings;
+        return this.store.read();
     }
 
-    updateSettings(newSettings) {
-        this.settings = { ...this.settings, ...newSettings };
-        return this.settings;
+    async updateSettings(newSettings) {
+        const current = await this.store.read();
+        const updated = { ...current, ...newSettings };
+        return this.store.write(updated);
     }
 }
 

@@ -1,6 +1,7 @@
-import { LayoutDashboard, Wifi, Smartphone, Shield, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, Wifi, Smartphone, Shield, Settings, LogOut, Network } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '../lib/utils';
+import { useAuth } from '../context/AuthContext';
 
 const SidebarItem = ({ icon: Icon, label, to }: { icon: any, label: string, to: string }) => {
     const location = useLocation();
@@ -23,6 +24,21 @@ const SidebarItem = ({ icon: Icon, label, to }: { icon: any, label: string, to: 
 };
 
 export const Layout = ({ children }: { children: React.ReactNode }) => {
+    const { logout } = useAuth();
+    const location = useLocation();
+
+    const getPageTitle = () => {
+        switch (location.pathname) {
+            case '/': return 'Dashboard';
+            case '/wifi': return 'WiFi Configuration';
+            case '/devices': return 'Device Manager';
+            case '/security': return 'Security Settings';
+            case '/system': return 'System Status';
+            case '/network': return 'Network Configuration';
+            default: return 'Router Admin';
+        }
+    };
+
     return (
         <div className="flex h-screen bg-gray-900 text-white overflow-hidden">
             {/* Sidebar */}
@@ -35,6 +51,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
 
                 <nav className="flex-1 px-4 space-y-2">
                     <SidebarItem icon={LayoutDashboard} label="Overview" to="/" />
+                    <SidebarItem icon={Network} label="Network" to="/network" />
                     <SidebarItem icon={Wifi} label="WiFi Settings" to="/wifi" />
                     <SidebarItem icon={Smartphone} label="Devices" to="/devices" />
                     <SidebarItem icon={Shield} label="Security" to="/security" />
@@ -42,7 +59,10 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
                 </nav>
 
                 <div className="p-4 border-t border-gray-800">
-                    <button className="flex items-center gap-3 px-4 py-3 w-full text-sm font-medium text-red-400 hover:text-red-300 hover:bg-gray-800 rounded-lg transition-colors">
+                    <button
+                        onClick={logout}
+                        className="flex items-center gap-3 px-4 py-3 w-full text-sm font-medium text-red-400 hover:text-red-300 hover:bg-gray-800 rounded-lg transition-colors"
+                    >
                         <LogOut size={20} />
                         <span>Logout</span>
                     </button>
@@ -52,7 +72,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
             {/* Main Content */}
             <div className="flex-1 flex flex-col overflow-hidden">
                 <header className="h-16 border-b border-gray-800 bg-gray-900 flex items-center justify-between px-8">
-                    <h2 className="text-lg font-semibold text-gray-200">Dashboard</h2>
+                    <h2 className="text-lg font-semibold text-gray-200">{getPageTitle()}</h2>
                     <div className="flex items-center gap-4">
                         <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-sm font-medium">
                             AD

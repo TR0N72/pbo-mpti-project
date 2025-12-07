@@ -8,6 +8,9 @@ const http = require('http');
 const DeviceManager = require('./classes/DeviceManager');
 const WifiManager = require('./classes/WifiManager');
 const TrafficMonitor = require('./classes/TrafficMonitor');
+const AuthManager = require('./classes/AuthManager');
+const NetworkManager = require('./classes/NetworkManager');
+const SecurityManager = require('./classes/SecurityManager');
 
 dotenv.config();
 
@@ -18,23 +21,28 @@ class RouterServer {
         this.io = new Server(this.server, {
             cors: {
                 origin: "http://localhost:5173",
-                methods: ["GET", "POST"]
+                methods: ["GET", "POST", "DELETE", "PUT"]
             }
         });
 
         // Initialize Managers
-        this.deviceManager = new DeviceManager([
-            { id: 1, name: 'iPhone 13', ip: '192.168.1.101', type: 'Mobile', status: 'Active' },
-            { id: 2, name: 'MacBook Pro', ip: '192.168.1.102', type: 'Laptop', status: 'Active' },
-            { id: 3, name: 'Smart TV', ip: '192.168.1.103', type: 'TV', status: 'Idle' },
-            { id: 4, name: 'Gaming PC', ip: '192.168.1.104', type: 'Desktop', status: 'Active' },
-        ]);
-
+        this.authManager = new AuthManager();
+        this.deviceManager = new DeviceManager();
         this.wifiManager = new WifiManager();
+        this.networkManager = new NetworkManager();
+        this.securityManager = new SecurityManager();
         this.trafficMonitor = new TrafficMonitor(this.io);
 
         this.configureMiddleware();
         this.setupRoutes();
+    }
+
+    async init() {
+        // Initialize async stores
+        await this.deviceManager.init();
+        await this.wifiManager.init();
+        await this.networkManager.init();
+        await this.securityManager.init();
     }
 
     configureMiddleware() {
@@ -44,36 +52,88 @@ class RouterServer {
 
     setupRoutes() {
         this.app.get('/', (req, res) => {
-            res.send('Router API (OOP Version) is running...');
+            res.send('Router API (OOP Version with Persistence) is running...');
         });
 
-        // Device Routes
-        this.app.get('/api/devices', (req, res) => {
-            res.json(this.deviceManager.getAllDevices());
+        // --- Auth Routes ---
+        this.app.post('/api/login', (req, res) => {
+            const { username, password } = req.body;
+            const result = this.authManager.login(username, password);
+            if (result.success) {
+                res.json(result);
+            } else {
+                res.status(401).json(result);
+            }
         });
 
-        this.app.post('/api/devices', (req, res) => {
-            const newDevice = this.deviceManager.addDevice(req.body);
+        this.app.post('/api/logout', (req, res) => {
+            res.json(this.authManager.logout());
+        });
+
+        // --- Network Routes ---
+        this.app.get('/api/network', (req, res) => {
+            res.json(this.networkManager.getSettings());
+        });
+
+        this.app.post('/api/network', async (req, res) => {
+            const updated = await this.networkManager.updateSettings(req.body);
+            res.json(updated);
+        });
+
+        // --- Security Routes ---
+        this.app.get('/api/security', (req, res) => {
+            res.json(this.securityManager.getSettings());
+        });
+
+        this.app.post('/api/security', async (req, res) => {
+            const updated = await this.securityManager.updateSettings(req.body);
+            res.json(updated);
+        });
+
+        this.app.post('/api/security/rules', async (req, res) => {
+            const rule = await this.securityManager.addPortRule(req.body);
+            res.status(201).json(rule);
+        });
+
+        this.app.delete('/api/security/rules/:id', async (req, res) => {
+            await this.securityManager.deletePortRule(parseInt(req.params.id));
+            res.json({ success: true });
+        });
+
+        // --- Device Routes ---
+        this.app.get('/api/devices', async (req, res) => {
+            res.json(await this.deviceManager.getAllDevices());
+        });
+
+        this.app.post('/api/devices', async (req, res) => {
+            const newDevice = await this.deviceManager.addDevice(req.body);
             res.status(201).json(newDevice);
         });
 
-        // Wifi Routes
+        this.app.delete('/api/devices/:id', async (req, res) => {
+            const result = await this.deviceManager.removeDevice(parseInt(req.params.id));
+            res.json(result);
+        });
+
+        // --- Wifi Routes ---
         this.app.get('/api/wifi', (req, res) => {
             res.json(this.wifiManager.getSettings());
         });
 
-        this.app.post('/api/wifi', (req, res) => {
-            const updated = this.wifiManager.updateSettings(req.body);
+        this.app.post('/api/wifi', async (req, res) => {
+            const updated = await this.wifiManager.updateSettings(req.body);
             res.json(updated);
         });
 
-        // Status Routes
+        // --- Status Routes ---
         this.app.get('/api/status', (req, res) => {
             res.json(this.trafficMonitor.getStatus());
         });
     }
 
-    start(port = 5000) {
+    async start(port = 5000) {
+        await this.init();
+
         // Start Traffic Monitor
         this.trafficMonitor.startMonitoring();
 
@@ -91,3 +151,4 @@ if (require.main === module) {
 }
 
 module.exports = RouterServer;
+//meow :3

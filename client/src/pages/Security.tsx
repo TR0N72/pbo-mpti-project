@@ -1,28 +1,75 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Shield, Lock, Globe, Plus, Trash2 } from 'lucide-react';
 
 export const Security = () => {
     const [firewallEnabled, setFirewallEnabled] = useState(true);
     const [vpnEnabled, setVpnEnabled] = useState(false);
     const [parentalControl, setParentalControl] = useState(false);
-
-    const [ports, setPorts] = useState([
-        { id: 1, name: 'Minecraft Server', port: '25565', ip: '192.168.1.104', protocol: 'TCP/UDP' },
-        { id: 2, name: 'Web Server', port: '80', ip: '192.168.1.102', protocol: 'TCP' },
-    ]);
+    const [ports, setPorts] = useState<any[]>([]);
 
     const [showModal, setShowModal] = useState(false);
     const [newRule, setNewRule] = useState({ name: '', port: '', ip: '', protocol: 'TCP' });
 
-    const addRule = (e: React.FormEvent) => {
-        e.preventDefault();
-        setPorts([...ports, { id: Date.now(), ...newRule }]);
-        setShowModal(false);
-        setNewRule({ name: '', port: '', ip: '', protocol: 'TCP' });
+    useEffect(() => {
+        fetchSettings();
+    }, []);
+
+    const fetchSettings = async () => {
+        try {
+            const res = await fetch('http://localhost:5000/api/security');
+            const data = await res.json();
+            setFirewallEnabled(data.firewallResponse);
+            setVpnEnabled(data.vpnEnabled);
+            setParentalControl(data.parentalControl);
+            setPorts(data.portRules || []);
+        } catch (e) {
+            console.error(e);
+        }
     };
 
-    const deletePort = (id: number) => {
-        setPorts(ports.filter(p => p.id !== id));
+    const toggleFeature = async (key: string, value: boolean) => {
+        try {
+            // Update UI immediately (optimistic)
+            if (key === 'firewallResponse') setFirewallEnabled(value);
+            if (key === 'vpnEnabled') setVpnEnabled(value);
+            if (key === 'parentalControl') setParentalControl(value);
+
+            // API Call
+            await fetch('http://localhost:5000/api/security', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ [key]: value })
+            });
+        } catch (e) {
+            console.error(e);
+            // Revert on failure (could improve with strict state management)
+        }
+    };
+
+    const addRule = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            const res = await fetch('http://localhost:5000/api/security/rules', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newRule)
+            });
+            const createdRule = await res.json();
+            setPorts([...ports, createdRule]);
+            setShowModal(false);
+            setNewRule({ name: '', port: '', ip: '', protocol: 'TCP' });
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    const deletePort = async (id: number) => {
+        try {
+            setPorts(ports.filter(p => p.id !== id));
+            await fetch(`http://localhost:5000/api/security/rules/${id}`, { method: 'DELETE' });
+        } catch (e) {
+            console.error(e);
+        }
     };
 
     return (
@@ -111,7 +158,7 @@ export const Security = () => {
                             <Shield className="text-green-500" size={24} />
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" checked={firewallEnabled} onChange={() => setFirewallEnabled(!firewallEnabled)} className="sr-only peer" />
+                            <input type="checkbox" checked={firewallEnabled} onChange={() => toggleFeature('firewallResponse', !firewallEnabled)} className="sr-only peer" />
                             <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
                         </label>
                     </div>
@@ -127,7 +174,7 @@ export const Security = () => {
                             <Globe className="text-blue-500" size={24} />
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" checked={vpnEnabled} onChange={() => setVpnEnabled(!vpnEnabled)} className="sr-only peer" />
+                            <input type="checkbox" checked={vpnEnabled} onChange={() => toggleFeature('vpnEnabled', !vpnEnabled)} className="sr-only peer" />
                             <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                         </label>
                     </div>
@@ -143,7 +190,7 @@ export const Security = () => {
                             <Lock className="text-purple-500" size={24} />
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" checked={parentalControl} onChange={() => setParentalControl(!parentalControl)} className="sr-only peer" />
+                            <input type="checkbox" checked={parentalControl} onChange={() => toggleFeature('parentalControl', !parentalControl)} className="sr-only peer" />
                             <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
                         </label>
                     </div>

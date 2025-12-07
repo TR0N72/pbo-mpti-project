@@ -1,14 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Wifi, Save, RefreshCw } from 'lucide-react';
 
 export const WifiSettings = () => {
     const [settings, setSettings] = useState({
-        ssid: 'MySuperFastWifi',
-        password: 'securepassword123',
-        security: 'WPA3',
-        band: '5GHz',
+        ssid: '',
+        password: '',
+        security: '',
+        band: '',
         isHidden: false,
     });
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetchSettings();
+    }, []);
+
+    const fetchSettings = async () => {
+        try {
+            const res = await fetch('http://localhost:5000/api/wifi');
+            const data = await res.json();
+            setSettings(data);
+            setLoading(false);
+        } catch (error) {
+            console.error('Failed to fetch wifi settings');
+            setLoading(false);
+        }
+    };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
@@ -18,10 +35,21 @@ export const WifiSettings = () => {
         }));
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        alert('WiFi Settings Saved! The router may restart.');
+        try {
+            await fetch('http://localhost:5000/api/wifi', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(settings)
+            });
+            alert('WiFi Settings Saved!');
+        } catch (error) {
+            console.error('Failed to save settings');
+        }
     };
+
+    if (loading) return <div className="text-white">Loading...</div>;
 
     return (
         <div className="max-w-4xl mx-auto space-y-6">
@@ -110,13 +138,7 @@ export const WifiSettings = () => {
                         <button
                             type="button"
                             className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-gray-200 px-6 py-2.5 rounded-lg font-medium transition-colors"
-                            onClick={() => setSettings({
-                                ssid: 'MySuperFastWifi',
-                                password: 'securepassword123',
-                                security: 'WPA3',
-                                band: '5GHz',
-                                isHidden: false,
-                            })}
+                            onClick={fetchSettings}
                         >
                             <RefreshCw size={18} />
                             Reset

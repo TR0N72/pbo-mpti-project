@@ -5,20 +5,62 @@ import { WifiSettings } from './pages/WifiSettings';
 import { Devices } from './pages/Devices';
 import { Security } from './pages/Security';
 import { System } from './pages/System';
+import { Login } from './pages/Login';
+import { Network } from './pages/Network';
+import { AuthProvider } from './context/AuthContext';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
 function App() {
   return (
-    <Router>
-      <Layout>
+    <AuthProvider>
+      <Router>
         <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/wifi" element={<WifiSettings />} />
-          <Route path="/devices" element={<Devices />} />
-          <Route path="/security" element={<Security />} />
-          <Route path="/system" element={<System />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/" element={
+            <ProtectedRoute>
+              <Layout>
+                <Dashboard />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/network" element={
+            <ProtectedRoute>
+              <Layout>
+                <Network />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/wifi" element={
+            <ProtectedRoute>
+              <Layout>
+                <WifiSettings />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/devices" element={
+            <ProtectedRoute>
+              <Layout>
+                <Devices />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/security" element={
+            <ProtectedRoute>
+              <Layout>
+                <Security />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/system" element={
+            <ProtectedRoute>
+              <Layout>
+                <System />
+              </Layout>
+            </ProtectedRoute>
+          } />
         </Routes>
-      </Layout>
-    </Router>
+      </Router>
+    </AuthProvider>
   );
 }
 

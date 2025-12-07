@@ -1,23 +1,7 @@
+import { useState, useEffect } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
-import { Smartphone, Activity, Download, Upload } from 'lucide-react';
-
-const networkTrafficData = [
-    { name: '00:00', download: 45, upload: 12 },
-    { name: '04:00', download: 20, upload: 5 },
-    { name: '08:00', download: 120, upload: 45 },
-    { name: '12:00', download: 250, upload: 80 },
-    { name: '16:00', download: 180, upload: 60 },
-    { name: '20:00', download: 300, upload: 100 },
-    { name: '23:59', download: 150, upload: 40 },
-];
-
-const deviceUsageData = [
-    { name: 'iPhone 13', usage: 4.5 },
-    { name: 'MacBook Pro', usage: 12.2 },
-    { name: 'Smart TV', usage: 8.5 },
-    { name: 'Gaming PC', usage: 15.1 },
-    { name: 'iPad', usage: 2.3 },
-];
+import { Smartphone, Activity, Download, Globe } from 'lucide-react';
+import io from 'socket.io-client';
 
 const StatCard = ({ title, value, subtext, icon: Icon, color }: any) => (
     <div className="bg-gray-800 p-6 rounded-xl border border-gray-700">
@@ -37,34 +21,94 @@ const StatCard = ({ title, value, subtext, icon: Icon, color }: any) => (
 );
 
 export const Dashboard = () => {
+    const [trafficData, setTrafficData] = useState<any[]>([]);
+    const [deviceCount, setDeviceCount] = useState(0);
+    const [wanIp, setWanIp] = useState('Checking...');
+    const [networkStats, setNetworkStats] = useState({
+        download: 0,
+        upload: 0,
+        cpu: 0,
+        ram: 0
+    });
+
+    useEffect(() => {
+        // Fetch WAN IP from network settings (simulated via LAN/WAN config)
+        fetch('http://localhost:5000/api/network')
+            .then(res => res.json())
+            .then(data => {
+                setWanIp(data.lan?.ip || '192.168.1.1'); // Using LAN IP as "Router IP" for now
+            })
+            .catch(() => setWanIp('Unknown'));
+
+        // Fetch connected devices
+        fetch('http://localhost:5000/api/devices')
+            .then(res => res.json())
+            .then(data => setDeviceCount(data.length))
+            .catch(() => setDeviceCount(0));
+
+        // Socket for real-time traffic
+        const socket = io('http://localhost:5000');
+
+        socket.on('traffic_update', (data: any) => {
+            setNetworkStats(prev => ({
+                ...prev,
+                download: data.download,
+                upload: data.upload
+            }));
+
+            setTrafficData(prev => {
+                const newData = [...prev, {
+                    name: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    download: data.download,
+                    upload: data.upload
+                }];
+                if (newData.length > 20) newData.shift(); // Keep last 20 points
+                return newData;
+            });
+        });
+
+        socket.on('initial_status', (status: any) => {
+            setNetworkStats({
+                download: status.downloadSpeed,
+                upload: status.uploadSpeed,
+                cpu: status.cpuLoad,
+                ram: status.ramUsage
+            });
+        });
+
+        return () => {
+            socket.disconnect();
+        };
+    }, []);
+
     return (
         <div className="space-y-6">
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard
-                    title="Download Speed"
-                    value="245.5 Mbps"
-                    subtext="Peak: 300 Mbps"
+                    title="Router IP"
+                    value={wanIp}
+                    subtext="Local LAN Address"
+                    icon={Globe}
+                    color="bg-blue-500/20 text-blue-500"
+                />
+                <StatCard
+                    title="Internet Speed"
+                    value={`${networkStats.download} Mbps`}
+                    subtext={`Upload: ${networkStats.upload} Mbps`}
                     icon={Download}
                     color="bg-green-500/20 text-green-500"
                 />
                 <StatCard
-                    title="Upload Speed"
-                    value="85.2 Mbps"
-                    subtext="Peak: 100 Mbps"
-                    icon={Upload}
-                    color="bg-blue-500/20 text-blue-500"
-                />
-                <StatCard
                     title="Connected Devices"
-                    value="12"
-                    subtext="3 Active Now"
+                    value={deviceCount}
+                    subtext="Active clients"
                     icon={Smartphone}
                     color="bg-purple-500/20 text-purple-500"
                 />
                 <StatCard
                     title="System Load"
-                    value="24%"
+                    value={`${networkStats.cpu || 24}%`}
                     subtext="CPU Usage"
                     icon={Activity}
                     color="bg-orange-500/20 text-orange-500"
@@ -73,11 +117,11 @@ export const Dashboard = () => {
 
             {/* Charts Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-gray-800 p-6 rounded-xl border border-gray-700">
-                    <h3 className="text-lg font-semibold text-white mb-6">Network Traffic (24h)</h3>
+                <div className="bg-gray-800 p-6 rounded-xl border border-gray-700 text-white">
+                    <h3 className="text-lg font-semibold text-white mb-6">Real-time Traffic</h3>
                     <div className="h-80">
                         <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={networkTrafficData}>
+                            <AreaChart data={trafficData}>
                                 <defs>
                                     <linearGradient id="colorDownload" x1="0" y1="0" x2="0" y2="1">
                                         <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3} />
@@ -103,10 +147,15 @@ export const Dashboard = () => {
                 </div>
 
                 <div className="bg-gray-800 p-6 rounded-xl border border-gray-700">
-                    <h3 className="text-lg font-semibold text-white mb-6">Bandwidth Usage by Device (GB)</h3>
+                    <h3 className="text-lg font-semibold text-white mb-6">Bandwidth Usage (Mock)</h3>
                     <div className="h-80">
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={deviceUsageData} layout="vertical">
+                            <BarChart data={[
+                                { name: 'iPhone 13', usage: 4.5 },
+                                { name: 'MacBook Pro', usage: 12.2 },
+                                { name: 'Smart TV', usage: 8.5 },
+                                { name: 'Gaming PC', usage: 15.1 }
+                            ]} layout="vertical">
                                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" horizontal={false} />
                                 <XAxis type="number" stroke="#9CA3AF" />
                                 <YAxis dataKey="name" type="category" stroke="#9CA3AF" width={100} />

@@ -1,0 +1,30 @@
+[
+  {
+    "id": 1,
+    "name": "iPhone 13",
+    "ip": "192.168.1.101",
+    "type": "Mobile",
+    "status": "Active"
+  },
+  {
+    "id": 2,
+    "name": "MacBook Pro",
+    "ip": "192.168.1.102",
+    "type": "Laptop",
+    "status": "Active"
+  },
+  {
+    "id": 3,
+    "name": "Smart TV",
+    "ip": "192.168.1.103",
+    "type": "TV",
+    "status": "Idle"
+  },
+  {
+    "id": 4,
+    "name": "Gaming PC",
+    "ip": "192.168.1.104",
+    "type": "Desktop",
+    "status": "Active"
+  }
+]
