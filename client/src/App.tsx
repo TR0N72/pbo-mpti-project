@@ -6,7 +6,7 @@ import { Devices } from './pages/Devices';
 import { Security } from './pages/Security';
 import { System } from './pages/System';
 import { Login } from './pages/Login';
-import { Network } from './pages/Network';
+import { NetworkSettings } from './pages/NetworkSettings';
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
@@ -26,7 +26,7 @@ function App() {
           <Route path="/network" element={
             <ProtectedRoute>
               <Layout>
-                <Network />
+                <NetworkSettings />
               </Layout>
             </ProtectedRoute>
           } />

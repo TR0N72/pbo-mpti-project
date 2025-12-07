@@ -7,7 +7,7 @@ interface NetworkState {
     [key: string]: any;
 }
 
-export const Network = () => {
+export const NetworkSettings = () => {
     const [settings, setSettings] = useState<NetworkState>({
         lan: { ip: '', subnet: '', gateway: '', dns: '' },
         dhcp: { enabled: true, startIp: '', endIp: '', leaseTime: 0 }
