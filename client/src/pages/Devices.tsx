@@ -21,7 +21,7 @@ export const Devices = () => {
 
     const fetchDevices = async () => {
         try {
-            const res = await fetch('http://localhost:5000/api/devices');
+            const res = await fetch('/api/devices');
             const data = await res.json();
             setDevices(data);
             setLoading(false);
@@ -33,7 +33,7 @@ export const Devices = () => {
 
     const deleteDevice = async (id: number) => {
         try {
-            await fetch(`http://localhost:5000/api/devices/${id}`, { method: 'DELETE' });
+            await fetch(`/api/devices/${id}`, { method: 'DELETE' });
             setDevices(devices.filter(d => d.id !== id));
         } catch (error) {
             console.error('Failed to delete device');

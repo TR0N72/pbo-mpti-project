@@ -17,7 +17,7 @@ export const WifiSettings = () => {
 
     const fetchSettings = async () => {
         try {
-            const res = await fetch('http://localhost:5000/api/wifi');
+            const res = await fetch('/api/wifi');
             const data = await res.json();
             setSettings(data);
             setLoading(false);
@@ -38,7 +38,7 @@ export const WifiSettings = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await fetch('http://localhost:5000/api/wifi', {
+            await fetch('/api/wifi', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(settings)

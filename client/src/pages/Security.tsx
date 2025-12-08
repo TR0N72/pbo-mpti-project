@@ -16,7 +16,7 @@ export const Security = () => {
 
     const fetchSettings = async () => {
         try {
-            const res = await fetch('http://localhost:5000/api/security');
+            const res = await fetch('/api/security');
             const data = await res.json();
             setFirewallEnabled(data.firewallResponse);
             setVpnEnabled(data.vpnEnabled);
@@ -35,7 +35,7 @@ export const Security = () => {
             if (key === 'parentalControl') setParentalControl(value);
 
             // API Call
-            await fetch('http://localhost:5000/api/security', {
+            await fetch('/api/security', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ [key]: value })
@@ -49,7 +49,7 @@ export const Security = () => {
     const addRule = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const res = await fetch('http://localhost:5000/api/security/rules', {
+            const res = await fetch('/api/security/rules', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newRule)
@@ -66,7 +66,7 @@ export const Security = () => {
     const deletePort = async (id: number) => {
         try {
             setPorts(ports.filter(p => p.id !== id));
-            await fetch(`http://localhost:5000/api/security/rules/${id}`, { method: 'DELETE' });
+            await fetch(`/api/security/rules/${id}`, { method: 'DELETE' });
         } catch (e) {
             console.error(e);
         }

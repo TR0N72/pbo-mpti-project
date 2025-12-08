@@ -3,6 +3,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const { Server } = require('socket.io');
 const http = require('http');
+const path = require('path');
 
 // Import OOP Classes
 const DeviceManager = require('./classes/DeviceManager');
@@ -48,12 +49,13 @@ class RouterServer {
     configureMiddleware() {
         this.app.use(cors());
         this.app.use(express.json());
+
+        // Serve static files from React app
+        this.app.use(express.static(path.join(__dirname, '../client/dist')));
     }
 
     setupRoutes() {
-        this.app.get('/', (req, res) => {
-            res.send('Router API (OOP Version with Persistence) is running...');
-        });
+        // API Routes should be defined first
 
         // --- Auth Routes ---
         this.app.post('/api/login', (req, res) => {
@@ -128,6 +130,12 @@ class RouterServer {
         // --- Status Routes ---
         this.app.get('/api/status', (req, res) => {
             res.json(this.trafficMonitor.getStatus());
+        });
+
+        // Catch-all handler for any request that doesn't match the above
+        // Catch-all handler for any request that doesn't match the above
+        this.app.use((req, res) => {
+            res.sendFile(path.join(__dirname, '../client/dist/index.html'));
         });
     }
 

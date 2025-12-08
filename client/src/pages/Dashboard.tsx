@@ -33,7 +33,7 @@ export const Dashboard = () => {
 
     useEffect(() => {
         // Fetch WAN IP from network settings (simulated via LAN/WAN config)
-        fetch('http://localhost:5000/api/network')
+        fetch('/api/network')
             .then(res => res.json())
             .then(data => {
                 setWanIp(data.lan?.ip || '192.168.1.1'); // Using LAN IP as "Router IP" for now
@@ -41,13 +41,13 @@ export const Dashboard = () => {
             .catch(() => setWanIp('Unknown'));
 
         // Fetch connected devices
-        fetch('http://localhost:5000/api/devices')
+        fetch('/api/devices')
             .then(res => res.json())
             .then(data => setDeviceCount(data.length))
             .catch(() => setDeviceCount(0));
 
         // Socket for real-time traffic
-        const socket = io('http://localhost:5000');
+        const socket = io();
 
         socket.on('traffic_update', (data: any) => {
             setNetworkStats(prev => ({

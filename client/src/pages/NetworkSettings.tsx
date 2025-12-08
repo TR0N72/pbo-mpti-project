@@ -20,7 +20,7 @@ export const NetworkSettings = () => {
 
     const fetchSettings = async () => {
         try {
-            const res = await fetch('http://localhost:5000/api/network');
+            const res = await fetch('/api/network');
             const data = await res.json();
             // Safeguard against missing data
             if (data && data.lan && data.dhcp) {
@@ -48,7 +48,7 @@ export const NetworkSettings = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await fetch('http://localhost:5000/api/network', {
+            await fetch('/api/network', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(settings)
