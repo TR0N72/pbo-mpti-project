@@ -10,12 +10,22 @@ import { NetworkSettings } from './pages/NetworkSettings';
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
+// Komponen Utama App:
+// Mengatur Routing (navigasi) dan Global State (Context) aplikasi.
 function App() {
   return (
+    // AuthProvider: Menyediakan state otentikasi (login/logout) ke seluruh komponen anak.
+    // Menerapkan pola 'Context API' untuk menghindari 'prop drilling'.
     <AuthProvider>
       <Router>
         <Routes>
+          {/* Public Route: Bisa diakses tanpa login */}
           <Route path="/login" element={<Login />} />
+
+          {/* Protected Routes: Membutuhkan otentikasi.
+              Menggunakan komponen wrapper 'ProtectedRoute' untuk mengecek status login.
+              Jika belum login, akan diredirect kembali ke halaman Login.
+           */}
           <Route path="/" element={
             <ProtectedRoute>
               <Layout>

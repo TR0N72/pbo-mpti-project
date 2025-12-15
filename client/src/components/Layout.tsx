@@ -3,8 +3,11 @@ import { Link, useLocation } from 'react-router-dom';
 import { cn } from '../lib/utils';
 import { useAuth } from '../context/AuthContext';
 
+// Komponen Helper: SidebarItem
+// Merupakan komponen kecil untuk me-render setiap link di sidebar agar kode lebih rapi (DRY Principle).
 const SidebarItem = ({ icon: Icon, label, to }: { icon: any, label: string, to: string }) => {
     const location = useLocation();
+    // Mengecek apakah URL saat ini sama dengan link ini untuk ngasih highlight aktif.
     const isActive = location.pathname === to;
 
     return (
@@ -13,8 +16,8 @@ const SidebarItem = ({ icon: Icon, label, to }: { icon: any, label: string, to: 
             className={cn(
                 "flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors",
                 isActive
-                    ? "bg-blue-600 text-white"
-                    : "text-gray-400 hover:text-white hover:bg-gray-800"
+                    ? "bg-blue-600 text-white" // Style saat aktif
+                    : "text-gray-400 hover:text-white hover:bg-gray-800" // Style default
             )}
         >
             <Icon size={20} />
@@ -23,10 +26,14 @@ const SidebarItem = ({ icon: Icon, label, to }: { icon: any, label: string, to: 
     );
 };
 
+// Layout Utama App:
+// Menerapkan pola "Shell" atau "Master Page".
+// Komponen ini membungkus semua halaman (children) dengan Sidebar dan Header yang konsisten.
 export const Layout = ({ children }: { children: React.ReactNode }) => {
     const { logout } = useAuth();
     const location = useLocation();
 
+    // Helper function untuk menentukan judul halaman berdasarkan URL (Dynamic Title).
     const getPageTitle = () => {
         switch (location.pathname) {
             case '/': return 'Dashboard';
@@ -41,7 +48,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
 
     return (
         <div className="flex h-screen bg-gray-900 text-white overflow-hidden">
-            {/* Sidebar */}
+            {/* Sidebar: Navigasi Kiri */}
             <div className="w-64 flex-shrink-0 border-r border-gray-800 bg-gray-900 flex flex-col">
                 <div className="p-6">
                     <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
@@ -69,7 +76,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
                 </div>
             </div>
 
-            {/* Main Content */}
+            {/* Main Content Area: Tempat konten halaman berubah-ubah */}
             <div className="flex-1 flex flex-col overflow-hidden">
                 <header className="h-16 border-b border-gray-800 bg-gray-900 flex items-center justify-between px-8">
                     <h2 className="text-lg font-semibold text-gray-200">{getPageTitle()}</h2>
@@ -81,6 +88,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
                 </header>
 
                 <main className="flex-1 overflow-y-auto p-8">
+                    {/* 'children' adalah konten halaman spesifik yang dirender oleh Router */}
                     {children}
                 </main>
             </div>

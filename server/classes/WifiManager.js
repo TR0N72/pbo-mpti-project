@@ -1,8 +1,10 @@
-const JsonStore = require('./JsonStore');
+const BaseManager = require('./BaseManager');
 
-class WifiManager {
+// Kelas WifiManager: Mengabstraksi konfigurasi Wi-Fi (SSID, Password, Channel).
+// Menggunakan INHERITANCE dari BaseManager.
+class WifiManager extends BaseManager {
     constructor() {
-        this.store = new JsonStore('wifi.json', {
+        super('wifi.json', {
             ssid: 'MySuperFastWifi',
             password: 'securepassword123',
             band: '5GHz',
@@ -12,18 +14,19 @@ class WifiManager {
         });
     }
 
-    async init() {
-        await this.store.init();
-    }
+    // Method init() DIHAPUS karena inherited.
 
+    // Method getSettings: Mengambil state konfigurasi Wi-Fi saat ini (Getter).
     getSettings() {
-        return this.store.read();
+        return this.getData();
     }
 
+    // Method updateSettings: Memperbarui konfigurasi Wi-Fi (Setter/Modifier).
+    // Melakukan penggabungan (merge) antara pengaturan lama dan baru sebelum disimpan.
     async updateSettings(newSettings) {
-        const current = await this.store.read();
+        const current = await this.getData();
         const updated = { ...current, ...newSettings };
-        return this.store.write(updated);
+        return this.saveData(updated);
     }
 }
 

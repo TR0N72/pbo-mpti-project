@@ -20,7 +20,9 @@ const StatCard = ({ title, value, subtext, icon: Icon, color }: any) => (
     </div>
 );
 
+// Halaman Dashboard: Menampilkan visualisasi data real-time.
 export const Dashboard = () => {
+    // State lokal untuk menyimpan data yang akan ditampilkan di grafik dan kartu
     const [trafficData, setTrafficData] = useState<any[]>([]);
     const [deviceCount, setDeviceCount] = useState(0);
     const [wanIp, setWanIp] = useState('Checking...');
@@ -31,42 +33,51 @@ export const Dashboard = () => {
         ram: 0
     });
 
+    // useEffect: Hook untuk menangani "Side Effects" (fetching data, subscription, dll).
+    // Array kosong [] berarti efek ini hanya dijalankan sekali SAAT KOMPONEN PERTAMA KALI DIBUAT (Mount).
     useEffect(() => {
-        // Fetch WAN IP from network settings (simulated via LAN/WAN config)
+        // 1. Fetch Data Awal (REST API)
+        // Mengambil data konfigurasi jaringan
         fetch('/api/network')
             .then(res => res.json())
             .then(data => {
-                setWanIp(data.lan?.ip || '192.168.1.1'); // Using LAN IP as "Router IP" for now
+                setWanIp(data.lan?.ip || '192.168.1.1'); // Menggunakan IP LAN sebagai fallback
             })
             .catch(() => setWanIp('Unknown'));
 
-        // Fetch connected devices
+        // Mengambil jumlah perangkat terhubung
         fetch('/api/devices')
             .then(res => res.json())
             .then(data => setDeviceCount(data.length))
             .catch(() => setDeviceCount(0));
 
-        // Socket for real-time traffic
+        // 2. Setup Real-time Connection (WebSocket)
+        // Membuka koneksi socket ke server untuk menerima update data secara live (tanpa refresh).
         const socket = io();
 
+        // Event Listener: Mendengarkan event 'traffic_update' dari server
         socket.on('traffic_update', (data: any) => {
+            // Update statistik angka instan
             setNetworkStats(prev => ({
                 ...prev,
                 download: data.download,
                 upload: data.upload
             }));
 
+            // Update data grafik (Chart History)
             setTrafficData(prev => {
                 const newData = [...prev, {
                     name: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                     download: data.download,
                     upload: data.upload
                 }];
-                if (newData.length > 20) newData.shift(); // Keep last 20 points
+                // Menjaga agar grafik hanya menampilkan 20 poin data terakhir (Rolling Window)
+                if (newData.length > 20) newData.shift();
                 return newData;
             });
         });
 
+        // Event Listener: Menerima status awal saat koneksi terbentuk
         socket.on('initial_status', (status: any) => {
             setNetworkStats({
                 download: status.downloadSpeed,
@@ -76,6 +87,8 @@ export const Dashboard = () => {
             });
         });
 
+        // Cleanup Function: Dijalankan saat komponen "mati" (Unmount).
+        // Sangat PENTING untuk menutup koneksi socket agar tidak memakan memori.
         return () => {
             socket.disconnect();
         };

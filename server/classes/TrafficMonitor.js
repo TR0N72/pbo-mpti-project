@@ -1,6 +1,8 @@
+// Kelas TrafficMonitor: Mengimplementasikan pemantauan trafik jaringan secara real-time.
+// Menggunakan pola Observer (via Socket.IO) untuk menyiarkan pembaruan state ke klien yang terhubung.
 class TrafficMonitor {
     constructor(io) {
-        this.io = io;
+        this.io = io; // Dependency Injection: Instance Socket.IO disuntikkan untuk komunikasi real-time
         this.intervalId = null;
         this.status = {
             downloadSpeed: 245.5,
@@ -12,19 +14,25 @@ class TrafficMonitor {
         this.setupSocketListeners();
     }
 
+    // Method getStatus: Mengembalikan snapshot state trafik saat ini.
     getStatus() {
         return this.status;
     }
 
+    // Method startMonitoring: Memulai siklus pemantauan berkala.
+    // Menetapkan interval waktu untuk pembaruan data (Polling/Heartbeat mechanism).
     startMonitoring(intervalMs = 2000) {
-        if (this.intervalId) return;
+        if (this.intervalId) return; // Mencegah multiple instance interval berjalan bersamaan (Idempotency)
 
         console.log('Starting traffic monitoring...');
+        // Menjadwalkan eksekusi fungsi broadcast secara periodik
         this.intervalId = setInterval(() => {
             this.broadcastTrafficUpdate();
         }, intervalMs);
     }
 
+    // Method stopMonitoring: Menghentikan siklus pemantauan.
+    // Membersihkan interval timer untuk mencegah kebocoran memori (Memory Leak prevention).
     stopMonitoring() {
         if (this.intervalId) {
             clearInterval(this.intervalId);
@@ -33,16 +41,19 @@ class TrafficMonitor {
         }
     }
 
+    // Method broadcastTrafficUpdate: Menyiarkan state terbaru ke seluruh klien (Broadcasting).
     broadcastTrafficUpdate() {
         const update = this.generateTrafficStats();
-        // Update internal state
+        // Memperbarui state internal dengan data baru
         this.status.downloadSpeed = update.download;
         this.status.uploadSpeed = update.upload;
 
-        // Broadcast to all connected clients
+        // Emit event via Socket.IO untuk notifikasi push ke klien (Publish-Subscribe Pattern)
         this.io.emit('traffic_update', update);
     }
 
+    // Method generateTrafficStats: Menghasilkan data simulasi (Mocking).
+    // Dalam implementasi produksi, fungsi ini akan berinteraksi dengan interface jaringan sistem operasi.
     generateTrafficStats() {
         return {
             download: Math.floor(Math.random() * 300),
@@ -50,20 +61,20 @@ class TrafficMonitor {
         };
     }
 
+    // Method setupSocketListeners: Mengonfigurasi event listener untuk koneksi WebSocket baru.
     setupSocketListeners() {
         this.io.on('connection', (socket) => {
             console.log('TrafficMonitor: Admin connected:', socket.id);
 
-            // Send initial status
+            // Mengirim state inisial segera setelah handshaking berhasil
             socket.emit('initial_status', this.getStatus());
 
-            // Start monitoring if not already running (or logic to handle per-connection)
-            // For now, we assume global monitoring
+            // Memastikan monitoring berjalan saat ada klien yang terhubung (Lazy Activation)
             this.startMonitoring();
 
             socket.on('disconnect', () => {
                 console.log('TrafficMonitor: Admin disconnected:', socket.id);
-                // Optionally stop if no clients, but let's keep it simple
+                // Opsional: Logika pembersihan saat klien terputus
             });
         });
     }
